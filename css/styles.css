@@ -1,0 +1,23 @@
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: black;
+  overflow: hidden;
+}
+
+#background {
+  z-index: -1;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+}
+
+#game {
+  width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/*# sourceMappingURL=styles.css.map */

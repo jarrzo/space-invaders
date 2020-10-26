@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Space Invaders</title>
+
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/CONFIG.js"></script>
+    <script src="js/Background.js"></script>
+    <script src="js/Game.js"></script>
+</head>
+<body>
+
+<div id="background"></div>
+
+<div id="game"></div>
+
+<script>
+    // Create background effects
+    let background = new Background();
+    background.init(document.getElementById("background"));
+    background.begin();
+
+    // The game
+    let game = new Game();
+    game.init(document.getElementById("game"));
+    game.begin();
+
+    let cheatsPossible = true;
+    let charList = 'idq';
+    let inputBuffer = [];
+    document.addEventListener("keydown", function (e) {
+
+        // cheats
+        if (cheatsPossible) {
+            if (charList.indexOf(e.key.toLowerCase()) !== -1) inputBuffer.push(e.key.toLowerCase());
+            if (inputBuffer.join("") === "iddqd") {
+                game.IDDQD();
+                cheatsPossible = false;
+            }
+        }
+
+        let keyCode = e.which || e.keyCode;
+        if (keyCode === 37 || keyCode === 39 || keyCode === 32) {
+            e.preventDefault();
+        }
+        game.keyDown(keyCode);
+    });
+
+    document.addEventListener("keyup", function (e) {
+        let keyCode = e.which || e.keyCode;
+        if (keyCode === 37 || keyCode === 39 || keyCode === 32) {
+            e.preventDefault();
+        }
+        game.keyUp(keyCode);
+    });
+</script>
+</body>
+</html>
