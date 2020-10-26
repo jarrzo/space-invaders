@@ -48,7 +48,7 @@ function Game() {
         let self = this;
         this.timer = setInterval(function () {
             self.loop();
-        }, 1000 / this.config.fps);
+        }, CONFIG.global.delta * 1000);
     }
 
     this.loop = function () {
@@ -268,20 +268,20 @@ function PlayState(params) {
     }
 
     this.updateInvadersDirection = function () {
-        let right = this.game.bounds.left;
-        let left = this.game.bounds.right;
+        let rightSide = this.game.bounds.left;
+        let leftSide = this.game.bounds.right;
         Object.values(this.gameEntities).forEach(value => {
             if (value.constructor.name === "Invader") {
-                if (value.x + value.width > right) right = value.x + value.width;
-                if (value.x < left) left = value.x;
+                if (value.x + value.width > rightSide) rightSide = value.x + value.width;
+                if (value.x < leftSide) leftSide = value.x;
             }
         });
 
-        if (this.invadersDirection === "RIGHT" && right >= this.game.bounds.right) {
+        if (this.invadersDirection === "RIGHT" && rightSide >= this.game.bounds.right) {
             this.invadersDirection = "LEFT";
             this.updateInvadersLevel();
         }
-        if (this.invadersDirection === "LEFT" && left <= this.game.bounds.left) {
+        if (this.invadersDirection === "LEFT" && leftSide <= this.game.bounds.left) {
             this.invadersDirection = "RIGHT";
             this.updateInvadersLevel();
         }
@@ -320,6 +320,10 @@ function PlayState(params) {
         }));
     }
 
+    this.addScore = function () {
+        this.game.currentGame.score += CONFIG.invader.pointsPerInvader;
+    }
+
     this.removeObject = function (object) {
         if (this.gameEntities.indexOf(object) !== -1) {
             this.gameEntities.splice(this.gameEntities.indexOf(object), 1);
@@ -355,13 +359,13 @@ function Ship(params) {
     }
 
     this.keysDown = function () {
-        if (this.playState.game.pressedKeyCodes[KEY_LEFT] && this.x > this.playState.game.bounds.left) {
+        if (this.playState.game.pressedKeyCodes[KEY_LEFT] && this.canMoveLeft()) {
             this.x -= CONFIG.ship.defaultSpeed * this.playState.game.delta;
         }
-        if (this.playState.game.pressedKeyCodes[KEY_RIGHT] && this.x < this.playState.game.bounds.right - this.width) {
+        if (this.playState.game.pressedKeyCodes[KEY_RIGHT] && this.canMoveRight()) {
             this.x += CONFIG.ship.defaultSpeed * this.playState.game.delta;
         }
-        if (this.playState.game.pressedKeyCodes[KEY_SPACE] && (this.lastRocketTime === null || (new Date()).valueOf() - this.lastRocketTime > (1000 / CONFIG.ship.rocketFireRate))) {
+        if (this.playState.game.pressedKeyCodes[KEY_SPACE] && this.canFireRocket()) {
             this.lastRocketTime = (new Date()).valueOf();
             this.fireRocket();
         }
@@ -376,6 +380,18 @@ function Ship(params) {
             height: CONFIG.rocket.height,
             direction: 'UP',
         }));
+    }
+
+    this.canFireRocket = function () {
+        return this.lastRocketTime === null || (new Date()).valueOf() - this.lastRocketTime > (1000 / CONFIG.ship.rocketFireRate);
+    }
+
+    this.canMoveLeft = function () {
+        return this.x > this.playState.game.bounds.left;
+    }
+
+    this.canMoveRight = function () {
+        return this.x < this.playState.game.bounds.right - this.width;
     }
 }
 
@@ -406,16 +422,16 @@ function Rocket(params) {
         for (let i = 0; i < this.playState.gameEntities.length; i++) {
             el = this.playState.gameEntities[i];
             if (el.constructor.name === "Invader") {
-                if (this.x >= el.x && this.x + this.width <= el.x + el.width && this.y >= el.y && this.y + this.height <= el.y + el.height) {
+                if (this.collidesWithObject(el)) {
                     this.playState.removeObject(el);
                     this.playState.removeObject(this);
-                    this.playState.game.currentGame.score += CONFIG.invader.pointsPerInvader;
+                    this.playState.addScore();
                     this.playState.invadersCount--;
                     break;
                 }
             }
             if (el.constructor.name === "Ship") {
-                if (this.x >= el.x && this.x + this.width <= el.x + el.width && this.y >= el.y && this.y + this.height <= el.y + el.height) {
+                if (this.collidesWithObject(el)) {
                     this.playState.removeObject(this);
                     this.playState.game.currentGame.lives--;
                     if (this.playState.game.currentGame.lives === 0) this.playState.loose();
@@ -423,6 +439,10 @@ function Rocket(params) {
                 }
             }
         }
+    }
+
+    this.collidesWithObject = function (object) {
+        return this.x >= object.x && this.x + this.width <= object.x + object.width && this.y >= object.y && this.y + this.height <= object.y + object.height
     }
 
     this.render = function (currentContext) {

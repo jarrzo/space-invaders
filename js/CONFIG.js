@@ -50,7 +50,7 @@ const CONFIG = {
     global: {
         textColor: "#ffffff",
         fps: 60,
-        delta: 1/60,
+        delta: 1 / 60,
     },
     IDDQD: {
         rocketFireRate: 50,
